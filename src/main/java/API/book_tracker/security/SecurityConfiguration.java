@@ -28,6 +28,7 @@ public class SecurityConfiguration {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req -> {
                     req.requestMatchers(HttpMethod.POST, "/usuarios").permitAll();
+                    req.requestMatchers(HttpMethod.POST, "/login").permitAll();
                     req.requestMatchers("/error").permitAll();
                     req.anyRequest().authenticated();
                 })
