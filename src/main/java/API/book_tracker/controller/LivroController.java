@@ -2,9 +2,11 @@ package API.book_tracker.controller;
 
 import API.book_tracker.model.Livro;
 import API.book_tracker.model.Usuario;
+import API.book_tracker.model.dto.DadosAtualizadoLivro;
 import API.book_tracker.model.dto.DadosCadastroLivro;
 import API.book_tracker.model.dto.DadosDetalharLivro;
 import API.book_tracker.repository.LivroRepository;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,7 +24,7 @@ public class LivroController {
     private LivroRepository livroRepository;
 
     @PostMapping
-    public ResponseEntity cadastrarLivro(@RequestBody @Valid DadosCadastroLivro dto){
+    public ResponseEntity cadastrarLivro(@RequestBody @Valid DadosCadastroLivro dto) {
         Usuario usuarioLogado = (Usuario) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         Livro novoLivro = new Livro();
@@ -39,7 +41,7 @@ public class LivroController {
     }
 
     @GetMapping
-    public ResponseEntity<List<DadosDetalharLivro>> listarLivro(){
+    public ResponseEntity<List<DadosDetalharLivro>> listarLivro() {
         Usuario usuarioLogado = (Usuario) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         var livros = livroRepository.findByUsuario(usuarioLogado);
@@ -48,5 +50,34 @@ public class LivroController {
                 .toList();
 
         return ResponseEntity.ok(dtoList);
+    }
+
+    @PutMapping
+    @Transactional
+    public ResponseEntity atualizarLivro(@RequestBody DadosAtualizadoLivro dto) {
+        Usuario usuarioLogado = (Usuario) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        var livro = livroRepository.getReferenceById(dto.id());
+
+        if (!livro.getUsuario().getId().equals(usuarioLogado.getId())) {
+            throw new RuntimeException("Acesso negado");
+        }
+        livro.atualizarDados(dto);
+
+        return ResponseEntity.ok(new DadosDetalharLivro(livro));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity deletarLivro(@PathVariable Long id) {
+        Usuario usuarioLogado = (Usuario) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        var livro = livroRepository.getReferenceById(id);
+
+        if (!livro.getUsuario().getId().equals(usuarioLogado.getId())) {
+            throw new RuntimeException("Acesso negado");
+        }
+        livroRepository.delete(livro);
+
+        return ResponseEntity.noContent().build();
     }
 }
