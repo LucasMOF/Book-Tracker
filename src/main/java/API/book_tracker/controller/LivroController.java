@@ -1,5 +1,6 @@
 package API.book_tracker.controller;
 
+import API.book_tracker.exception.AcessoNegadoException;
 import API.book_tracker.model.Livro;
 import API.book_tracker.model.Usuario;
 import API.book_tracker.model.dto.DadosAtualizadoLivro;
@@ -60,8 +61,7 @@ public class LivroController {
         var livro = livroRepository.getReferenceById(dto.id());
 
         if (!livro.getUsuario().getId().equals(usuarioLogado.getId())) {
-            throw new RuntimeException("Acesso negado");
-        }
+            throw new AcessoNegadoException("Acesso negado: Você não tem permissão para alterar este livro.");        }
         livro.atualizarDados(dto);
 
         return ResponseEntity.ok(new DadosDetalharLivro(livro));
@@ -74,10 +74,10 @@ public class LivroController {
         var livro = livroRepository.getReferenceById(id);
 
         if (!livro.getUsuario().getId().equals(usuarioLogado.getId())) {
-            throw new RuntimeException("Acesso negado");
-        }
+            throw new AcessoNegadoException("Acesso negado: Você não tem permissão para deletar este livro.");        }
         livroRepository.delete(livro);
 
         return ResponseEntity.noContent().build();
     }
 }
+
